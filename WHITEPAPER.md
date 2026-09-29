@@ -3,7 +3,9 @@
 **Coin:** White Fang · **Ticker:** WFANG *(preliminary availability check clear, Sept 29 2026)*
 **Slogan:** *Supercomputer fighting disease.*
 **Positioning:** *Every coin mined helped research.*
-**Status:** DRAFT v1 — 29 September 2026. Open decisions are marked **[OPEN]**.
+**Status:** DRAFT v1.1 — 29 September 2026. Tokenomics decided by IGOR under
+Sebastien's delegation ("decide with the greatest logic"). The founder can
+override any parameter before launch.
 
 ---
 
@@ -78,40 +80,79 @@ working, Sept 2026).
    on-chain coinbase outputs or via periodic distribution transactions —
    **[OPEN]** design decision.
 
-### Anti-fraud and open questions **[OPEN]**
+### Oracle design — v1 decision (pragmatic, centralized at launch)
 
-- **Identity binding:** how a Folding@home donor name is cryptographically
-  bound to a WFANG address (signed message scheme proposed).
+Perfection is the enemy of launch. The v1 oracle is **operated by the
+project** and fully auditable; decentralization comes later.
+
+1. A folder registers by publishing a signed binding:
+   `Folding@home donor name → WFANG address` (signature proves address
+   ownership; donor-name ownership is claimed on first registration —
+   disputes resolved by the project in v1).
+2. Each reward period (e.g. 24h), the oracle snapshots donor point deltas
+   from the Folding@home stats API, computes each donor's share of the
+   period's folding allocation, and publishes the complete distribution
+   list **publicly** (donor, points, WFANG owed) before paying.
+3. Anyone can recompute the distribution from the public Folding@home stats
+   — the oracle is trusted to *execute*, not to *decide*.
+4. Checkpoints prevent double-payment: a period's deltas are committed once
+   and never re-counted.
+
+Roadmap: v2 adds multi-signer oracle attestations; v3 targets on-chain
+verification of folding proofs.
+
+### Remaining open questions **[OPEN]**
+
 - **Sybil resistance:** one human, one donor identity — policy and
-  enforcement TBD.
-- **Double-payment:** deltas must be computed against committed checkpoints
-  so points are never paid twice.
+  enforcement TBD (v1 relies on registration + public scrutiny).
 - **API dependence:** the individual-donor stats endpoint returned
   HTTP_NOT_FOUND in testing (Sept 2026); the exact data source for
   per-donor scores must be validated before launch. Fallback: team-level
   aggregation with sub-accounts.
-- **Oracle trust:** the oracle is a trusted component at launch; the
-  roadmap includes decentralizing it (multi-signer attestations, then
-  on-chain verification).
 
-## 5. Tokenomics **[OPEN — parameters proposed, not decided]**
+## 5. Tokenomics
 
-| Parameter | Proposal | Status |
+| Parameter | Value | Status |
 |---|---|---|
 | Name | White Fang Medical Research | Decided |
 | Coin name | White Fang | Decided |
-| Ticker | WFANG | Preliminary check clear |
+| Ticker | WFANG | Preliminary check clear (full verification pending) |
 | Consensus | Scrypt PoW | Decided |
 | Premine | None — fair launch from block 1 | Decided |
-| Block time | 2.5 minutes (Litecoin-style) | Proposed |
-| Max supply | 84,000,000 WFANG | Proposed |
-| Halving | Every 840,000 blocks (~4 years) | Proposed |
-| Folding / PoW reward split | 70% folding / 30% PoW | **Proposed, NOT accepted** |
+| Block time | 2.5 minutes | Decided |
+| Max supply | 84,000,000 WFANG | Decided |
+| Block reward (initial) | 50 WFANG | Decided |
+| Halving | Every 840,000 blocks (~4 years) | Decided |
+| Reward split | **60% folding / 40% PoW miners** | Decided (see rationale) |
 | Launch date | TBD | Open |
 
-The 70/30 split in favor of folding reflects the project's mission —
-security needs far less than the mission deserves — but the final ratio is
-the founder's call.
+Emission check: 840,000 blocks × 50 WFANG × 2 (geometric series) =
+84,000,000. ✓
+
+### Why 60/40
+
+The split is the project's most important economic decision, and it was made
+on the following logic:
+
+- **The mission is the brand.** The slogan is *Supercomputer fighting
+  disease* — folding must receive the majority of every block, or the
+  branding is a lie.
+- **Security must be real from block 1.** 40% of the block reward is a full,
+  serious miner incentive — more than enough to attract Scrypt hashrate at
+  low early difficulty, when coins are cheapest to mine. A new chain's
+  biggest risk is low hashrate, not low folding participation.
+- **60/40, not 70/30:** the earlier 70/30 proposal starved the security
+  budget for little extra mission gain. 60/40 keeps the mission clearly
+  first while giving miners a share no one can call symbolic.
+- The split is consensus-critical and cannot be changed lightly after
+  launch — hence deciding it now, before any code exists.
+
+### How the split works mechanically
+
+Each block mints 50 WFANG: **20 WFANG** to the PoW miner (coinbase),
+**30 WFANG** to the folding allocation. The folding allocation accumulates
+and is distributed periodically (e.g. daily) by the oracle, proportional to
+verified Folding@home points earned in the period — see §4.
 
 ## 6. Fair Launch
 
@@ -124,10 +165,14 @@ under the same rules as everyone else's.
 
 - [x] Concept validated — "Every coin mined helped research."
 - [x] Branding locked — name, slogan, coin visual, token logos (v1).
-- [ ] **Tokenomics finalized** — block time, supply, reward split, oracle design.
+- [x] **Tokenomics decided** — 2.5 min blocks, 84M max, 50 WFANG/block,
+      halving every 840,000 blocks, 60% folding / 40% PoW.
+- [x] **Oracle v1 designed** — project-operated, publicly auditable,
+      decentralization roadmap set.
 - [ ] Full availability verification — name, ticker, domains, socials, trademarks.
 - [ ] Chain implementation — Scrypt PoW client (fork of an established codebase).
-- [ ] Folding oracle — identity binding, delta computation, auditable distribution.
+- [ ] Folding oracle implementation.
+- [ ] Donor stats API source validated (HTTP_NOT_FOUND issue resolved).
 - [ ] Testnet with folding rewards.
 - [ ] Website / landing page.
 - [ ] Mainnet launch — fair, from block 1.
